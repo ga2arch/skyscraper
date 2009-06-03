@@ -8,7 +8,7 @@ from twisted.application import service
 from twisted.words.protocols.jabber import jid
 from wokkel.client import XMPPClient
 
-from protocol import TranslateMessageProtocol
+from protocol import TranslateMessageProtocol, TranslatePresenceProtocol
 
 application = service.Application("translate")
 
