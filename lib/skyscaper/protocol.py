@@ -8,6 +8,7 @@ from wokkel.xmppim import MessageProtocol, PresenceClientProtocol
 from wokkel.xmppim import AvailablePresence
 
 import xmpp_commands
+import time
 
 class TranslateMessageProtocol(MessageProtocol):
 
@@ -66,3 +67,57 @@ class TranslateMessageProtocol(MessageProtocol):
             cmd(jid, self, args)
         else:
             self.send_plain(msg['from'],"No such command %s\n" % str(a[0]))
+
+
+class TranslatePresenceProtocol(PresenceClientProtocol):
+
+    started = time.time()
+    connected = None
+    lost = None
+    num_connections = 0
+
+    def __init__(self, jid):
+        super(TranslatePresenceProtocol, self).__init__()
+        self.jid = jid.full()
+
+    def connectionInitialized(self):
+        super(TranslatePresenceProtocol, self).connectionInitialized()
+        self.connected = time.time()
+        self.lost = None
+        self.num_connections += 1
+        self.update_presence()
+
+
+    def connectionLost(self, reason):
+        self.connected = None
+        self.lost = time.time()
+
+    def presence_fallback(self, *stuff):
+        log.msg("Running presence fallback.")
+        self.available(None, None, {None: "Hi, everybody!"})
+
+    def update_presence(self):
+        status="Translating a lot"
+        self.available(None, None, {None: status})
+
+    def subscribedReceived(self, entity):
+        log.msg("Subscribe received from %s" % (entity.userhost()))
+        #welcome_message = 'Welcome.'
+        #self.send_plain(entity.full(), welcome_message)
+
+    def unsubscribedReceived(self, entity):
+        log.msg("Unsubscribed received from %s" % (entity.userhost()))
+        self.unsubscribe(entity)
+        self.unsubscribed(entity)
+
+    def subscribeReceived(self, entity):
+        log.msg("Subscribe received from %s" % (entity.userhost()))
+        self.subscribe(entity)
+        self.subscribed(entity)
+        self.update_presence()
+
+    def unsubscribeReceived(self, entity):
+        log.msg("Unsubscribe received from %s" % (entity.userhost()))
+        self.unsubscribe(entity)
+        self.unsubscribed(entity)
+        self.update_presence()
