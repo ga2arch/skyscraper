@@ -14,9 +14,13 @@ application = service.Application("translate")
 
 j = jid.internJID("yourjid")
 
-xmppclient = XMPPClient(j, "yourpassword")
+xmppclient = XMPPClient(j, "password")
 xmppclient.logTraffic = False
-echobot = TranslateMessageProtocol(j)
-echobot.setHandlerParent(xmppclient)
-xmppclient.setServiceParent(application)
+protocols = [TranslateMessageProtocol,
+             TranslatePresenceProtocol]
 
+for p in protocols:
+    handler=p(j)
+    handler.setHandlerParent(xmppclient)
+
+xmppclient.setServiceParent(application)
