@@ -9,6 +9,8 @@ from translate import Translate
 from languages import Language
 import protocol
 
+all_commands = {}
+
 def arg_required(validator=lambda n: n):
     def f(orig):
         def every(self, jid, prot, args):
@@ -83,6 +85,12 @@ class TranslateCommand(BaseCommand):
                                                   .addErrback(self._error, jid, prot)
             except Exception, e:
                 self._error(e.message, jid, prot)
-                
-       
-all_commands = {'translate':TranslateCommand()}
+
+for __t in (t for t in globals().values() if isinstance(type, type(t))):
+    if BaseCommand in __t.__mro__:
+        try:
+            i = __t()
+            all_commands[i.name] = i
+        except TypeError, e:
+            log.msg("Error loading %s: %s" % (__t.__name__, str(e)))
+            pass
