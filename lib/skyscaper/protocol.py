@@ -7,6 +7,8 @@ from twisted.words.protocols.jabber.xmlstream import IQ
 from wokkel.xmppim import MessageProtocol, PresenceClientProtocol
 from wokkel.xmppim import AvailablePresence
 
+import xmpp_commands
+
 class TranslateMessageProtocol(MessageProtocol):
     
     def __init__(self, jid):
@@ -19,13 +21,13 @@ class TranslateMessageProtocol(MessageProtocol):
 
         self.send(AvailablePresence())
         
-        commands=xmpp_commands.all_commands
-        self.commands={}
-        for c in commands.values():
-            self.commands[c.name] = c
-            for a in c.aliases:
-                self.commands[a] = c
-        log.msg("Loaded commands: %s" % `sorted(commands.keys())`)
+        self.commands=xmpp_commands.all_commands
+        #self.commands={}
+        #for c in commands:
+            #self.commands[c] = commands[c]
+            #for a in c.aliases:
+                #self.commands[a] = c
+        log.msg("Loaded commands: %s" % `sorted(self.commands.keys())`)
         
     def connectionLost(self, reason):
         log.msg('Disconnected!')
@@ -43,11 +45,10 @@ class TranslateMessageProtocol(MessageProtocol):
         log.msg("Error received for %s: %s" % (msg['from'], msg.toXml()))
         
     def onMessage(self, msg):
-        """try:
+        try:
             self.__onMessage(msg)
         except KeyError:
-            log.err()"""
-        self.send_plain(msg['from'], unicode(msg.body).strip())
+            log.err()
             
     def __onMessage(self, msg):
         if msg.getAttribute("type") == 'chat' \
@@ -58,12 +59,13 @@ class TranslateMessageProtocol(MessageProtocol):
             self.__onUserMessage(a, args, msg)
             
     def __onUserMessage(self, a, args, msg):
-        cmd = self.command.get(a[0].lower())
+        jid = msg['from']
+        content = unicode(msg.body).strip()
+        cmd = self.commands.get(a[0].lower())
         if cmd:
-            cmd(msg.body.strip(), self, args)
+            cmd(jid, self, args)
         else:
-            self.send_plain(msg['from'],
-                            "No such command %s\n" % a[0])
+            self.send_plain(msg['from'],"No such command %s\n" % str(a[0]))
 
         
     
