@@ -1,0 +1,3 @@
+[submodule "lib/twisted-googletranslate"]
+	path = lib/twisted-googletranslate
+	url = git://github.com/ga2arch/twisted-googletranslate.git
